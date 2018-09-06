@@ -1,0 +1,14 @@
+service: pdf-generator
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  region: us-east-1
+
+functions:
+  send:
+    handler: handler.send
+    events:
+      - http:
+          path: ticket
+          method: post

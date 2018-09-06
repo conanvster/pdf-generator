@@ -1,0 +1,17 @@
+{
+  "name": "pdf-generator",
+  "version": "1.0.0",
+  "description": "",
+  "main": "handler.js",
+  "dependencies": {
+    "bwip-js": "^1.7.1",
+    "moment-timezone": "^0.5.21",
+    "pdfkit": "^0.8.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
