@@ -1,9 +1,14 @@
-service: pdf-generator
+service: pdf-generator-v1
 
 provider:
   name: aws
-  runtime: nodejs8.10
-  region: us-east-1
+  runtime: nodejs14.x
+  lambdaHashingVersion: '20201221'
+  region: eu-central-1
+  stage: dev
+  apiGateway:
+    binaryMediaTypes:
+      - "application/pdf"
 
 functions:
   send:

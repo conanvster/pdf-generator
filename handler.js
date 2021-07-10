@@ -3,7 +3,7 @@ const barcode = require('bwip-js');
 const PDFDocument = require('pdfkit');
 const moment = require('moment-timezone');
 
-let generateBarcodePng = (ticket) => {
+const generateBarcodePng = (ticket) => {
   return new Promise((resolve, reject) => {
     barcode.toBuffer({
       bcid: 'code128',
@@ -23,11 +23,9 @@ let generateBarcodePng = (ticket) => {
   });
 };
 
-let generatePdfPage = (ticket, png) => {
+const generatePdfPage = async (ticket, png) => {
   return new Promise((resolve, reject) => {
-    const txtFileStream = fs.createWriteStream('/tmp/MetalistTickets.pdf');
     let doc = new PDFDocument();
-    doc.pipe(txtFileStream);
     doc.image('./ticket.png', 10, 0, {width: 500});
     doc.font('./OpenSans-Bold.ttf');
 
@@ -55,16 +53,15 @@ let generatePdfPage = (ticket, png) => {
 
     doc
       .fontSize(11)
-      .text('ЧЕМПИОНАТ УКРАИНЫ\n СРЕДИ КОМАНД\n ПЕРВОЙ ЛИГИ', -350, -510, {align: 'center'});
+      .text('vbet лига\n сезон 2021/22', -350, -510, {align: 'center'});
 
     doc.end();
 
-    txtFileStream.on('finish', () => {
-      resolve();
-    });
-
-    txtFileStream.on('error', (error) => {
-      reject('file writing error: ', error);
+    const buffers = [];
+    doc.on("data", buffers.push.bind(buffers));
+    doc.on("end", () => {
+      const pdfData = Buffer.concat(buffers);
+      resolve(pdfData);
     });
   });
 };
@@ -74,25 +71,24 @@ module.exports.send = async (event) => {
     const ticket = JSON.parse(event.body);
     const barcode = await generateBarcodePng(ticket);
     const data = await generatePdfPage(ticket, barcode);
-    return generateResponse(200)
+    return generateResponse(200, data)
   } catch (err) {
     return generateError(500, err)
   }
 };
 
 
-function generateResponse (code) {
-  const data = fs.readFileSync('/tmp/MetalistTickets.pdf');
-  const body = Buffer.from(data).toString('base64');
-  return {
-    isBase64Encoded: true,
-    statusCode: code,
-    headers: {'content-type': 'application/pdf', 'content-length': body.length},
-    body
-  }
-}
+const generateResponse = (code, data) =>({
+  statusCode: code,
+  isBase64Encoded: true,
+  headers: {
+    "Content-type": "application/pdf"
+  },
+  body: data.toString("base64")
+})
 
-function generateError (code, err) {
+
+const generateError = (code, err) => {
   console.log(err);
   return {
     statusCode: code,
@@ -100,7 +96,7 @@ function generateError (code, err) {
   }
 }
 
-function translate(direction) {
+const translate = (direction) => {
   if (direction === 'north') { return 'Северная'}
   if (direction === 'south') { return 'Южная'}
   if (direction === 'east') { return 'Восточная'}
